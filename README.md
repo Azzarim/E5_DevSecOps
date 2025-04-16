@@ -1,5 +1,10 @@
 # 📦 Projet DevSecOps – Kubernetes E5
 
+## Membres du groupe
+
+- DELZENNE Gauthier
+- NARBERGER Théo
+
 ## 👨‍💻 Contexte
 
 Dans le cadre de notre mission en tant qu’ingénieur SRE, notre scrum master nous a confié la réalisation d’une **maquette Kubernetes** pour un client souhaitant tester la faisabilité d’une migration vers cette technologie.
