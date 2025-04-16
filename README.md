@@ -158,7 +158,7 @@ docker build ./django-volt -t localhost/django-volt:latest
  => => naming to localhost/django-volt:latest
 ```
 
-On répète cette opération pour chacune des applications.
+On répète cette opération pour chacune des applications django.
 
 ---
 
