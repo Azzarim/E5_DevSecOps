@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: django-volt-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: django-volt
+  ports:
+  - port: 5005
+    targetPort: 5005
+    nodePort: 30002

@@ -1,0 +1,13 @@
+.git
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+./nginx
+*.sh
+*.md
+docker-compose.yml
+Dockerfile
+render.yaml
+.gitignore
+.dockerignore

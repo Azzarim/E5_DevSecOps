@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-soft-ui-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: django-soft-ui
+  template:
+    metadata:
+      labels:
+        app: django-soft-ui
+    spec:
+      containers:
+        - name: django-soft-ui
+          imagePullPolicy: Never
+          image: localhost/django-soft-ui:latest
+          ports:
+            - containerPort: 5005

@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-adminlte-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: django-adminlte
+  template:
+    metadata:
+      labels:
+        app: django-adminlte
+    spec:
+      containers:
+        - name: django-adminlte
+          imagePullPolicy: Never
+          image: localhost/django-adminlte:latest
+          ports:
+            - containerPort: 5005

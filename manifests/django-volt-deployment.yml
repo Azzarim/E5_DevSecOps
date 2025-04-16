@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-volt-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: django-volt
+  template:
+    metadata:
+      labels:
+        app: django-volt
+    spec:
+      containers:
+        - name: django-volt
+          imagePullPolicy: Never
+          image: localhost/django-volt:latest
+          ports:
+            - containerPort: 5005
