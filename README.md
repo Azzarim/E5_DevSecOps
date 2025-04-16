@@ -401,3 +401,4 @@ Aperçu visuel des applications déployées dans le cluster Kubernetes :
 Cette architecture illustre le déploiement de trois applications distinctes dans un cluster Kubernetes. Chaque application dispose de son propre déploiement, service, et éventuellement d’un ingress pour gérer les accès externes. Le LoadBalancer, les NodePort et l’ingress contrôlent l’exposition des applications. Le tout est orchestré par le plan de contrôle Kubernetes, garantissant la haute disponibilité et la scalabilité de l’environnement.
 
 <img width="100%" src="images/architecture.png">
+
