@@ -42,7 +42,32 @@ Chaque application sera accompagnée d’un **Dockerfile** optimisé.
 
 ---
 
-### 2. Création des images Docker
+### 2. Les technologies utilisées
+
+#### Docker
+
+Docker est une plateforme de virtualisation légère qui permet de **packager une application et toutes ses dépendances** dans un conteneur. Ces conteneurs sont portables, reproductibles et isolés du système hôte, ce qui facilite grandement le développement, les tests et le déploiement des applications. Grâce à Docker, nous avons pu créer des images optimisées et autonomes pour chaque application du projet.
+
+#### Kubernetes
+
+Kubernetes est une plateforme d’orchestration de conteneurs qui permet de **déployer, gérer et faire évoluer automatiquement des applications** conteneurisées. Il s’assure de la haute disponibilité, de la scalabilité, de la reprise après erreur et de la répartition de charge des applications. Il permet aussi de déployer des services, configurer des volumes, des secrets ou encore des règles d’accès réseau de manière déclarative via des manifestes.
+
+#### Pourquoi ce choix ?
+
+Nous avons choisi **Docker** et **Kubernetes** pour plusieurs raisons :
+
+- **Portabilité** : Les conteneurs Docker fonctionnent de la même manière en local, en pré-prod et en production.
+- **Scalabilité et résilience** : Kubernetes gère automatiquement la montée en charge et la redondance des pods pour garantir la disponibilité.
+- **Automatisation** : Déploiement, mise à jour, rollbacks et surveillance sont gérés automatiquement.
+- **Modularité** : Chaque application du projet est indépendante, facilitant la maintenance et l’évolution.
+- **Standard industriel** : Ces outils sont largement utilisés dans les grandes entreprises et recommandés pour les architectures modernes (microservices, DevOps…).
+
+Ces technologies répondent parfaitement aux besoins du client, notamment pour une future migration vers une architecture cloud robuste et maintenable.
+
+
+---
+
+### 3. Création des images Docker
 
 - Clone des projets depuis Github
 - Rédaction de docker ignore et optimisation du dockerfile pour gagner de l'espace
@@ -63,7 +88,7 @@ Resolving deltas: 100% (52/52), done.
 ```
 **Rédaction d'un docker ignore**
 Rédaction d'un docker ignore afin d'optimiser l'image docker le plus possible en enlevant les fichiers inutiles
-```
+```dockerignore
 .git
 __pycache__
 *.pyc
@@ -167,13 +192,21 @@ On répète cette opération pour chacune des applications django.
 
 ---
 
-### 3. Déploiement Kubernetes
+### 4. Déploiement Kubernetes
 
 Pour chaque app, les composants suivants sont créés :
 
-- **Deployment** : gère la réplication et le redémarrage automatique des pods.
-- **Service** : expose les pods à l’intérieur du cluster.
-- **Ingress** : définit les règles de routage HTTP externe.
+Pour chaque application, les composants suivants ont été créés afin d’assurer un déploiement structuré, stable et accessible :
+
+- **Deployment** :  
+  Le Deployment est un composant essentiel de Kubernetes. Il permet de définir la manière dont les pods (les unités d'exécution) doivent être déployés, mis à jour et maintenus. Il gère automatiquement la création, la mise à l’échelle, la mise à jour et la réparation des pods. Si un pod plante ou devient inaccessible, le Deployment s’assure qu’il soit redémarré ou remplacé, garantissant ainsi une haute disponibilité de l’application.
+
+- **Service** :  
+  Le Service agit comme une couche d’abstraction devant les pods. Étant donné que les pods peuvent être supprimés ou recréés à tout moment, leurs adresses IP changent dynamiquement. Le Service fournit une adresse IP fixe et un nom DNS stable pour accéder aux pods. Il permet aussi de répartir les requêtes entre plusieurs pods via un mécanisme de **load balancing** interne au cluster. Le type de service (ClusterIP, NodePort, LoadBalancer, etc.) détermine la méthode d’accès.
+
+- **Ingress** :  
+  L’Ingress permet de gérer le routage HTTP(S) depuis l’extérieur vers les services internes du cluster. Il centralise les points d’entrée et permet d’associer des chemins ou des noms de domaines aux différentes applications via un contrôleur Ingress (souvent basé sur Nginx). Grâce à l’Ingress, on peut configurer facilement un accès externe à plusieurs applications à travers une seule adresse IP, avec un routage différencié selon l’URL utilisée.
+
 
 Un **Ingress Controller** est également déployé pour gérer l’entrée HTTP du cluster.
 
@@ -224,9 +257,15 @@ On refait quelque chose de similaire pour les deux autres applications, la seule
 
 **Service Manifest**
 
-##### AdminLte
+##### **AdminLte — Service de type ClusterIP**
 
 Ce service expose l’application django-adminlte sur le port 5005 en interne, ce qui permet aux autres composants du cluster de communiquer avec elle.
+
+Le service utilisé ici est de type **ClusterIP**, ce qui signifie qu’il rend l'application accessible uniquement **au sein du cluster Kubernetes**.  
+Ce choix est adapté pour des applications qui n’ont pas besoin d’être exposées à l’extérieur, mais qui doivent pouvoir communiquer avec d’autres composants internes comme un Ingress ou un backend.
+
+> 📌 **Raison du choix :** Cette application est accessible via un Ingress, donc il n’est pas nécessaire de l’exposer directement via un port externe.
+
 
 ```yml
 apiVersion: v1
@@ -244,6 +283,11 @@ spec:
 
 Ce service de type NodePort rend l’application django-soft-ui accessible depuis l’extérieur du cluster via le port 30001 du nœud, en redirigeant vers le port 5005 du conteneur.
 
+Ce service utilise le type **NodePort**, permettant d’**exposer l’application en dehors du cluster** via le port 30001 du nœud. Cela signifie qu’en accédant à `IP_du_noeud:30001`, l’utilisateur peut atteindre l’application.
+
+> 📌 **Raison du choix :** Le NodePort permet un accès direct externe sans configuration d’un Ingress, ce qui est utile pour tester rapidement l’accessibilité d’une application sans contrôleur Ingress.
+
+
 ```yml
 apiVersion: v1
 kind: Service
@@ -259,9 +303,13 @@ spec:
     nodePort: 30001
 ```
 
-##### Volt
+##### Volt — Service de type LoadBalancer
 
 Ce service de type LoadBalancer permet d’exposer l’application django-volt à l’extérieur du cluster avec une IP publique (si prise en charge) et un accès via le port 30002, mappé au port 5005 de l’application.
+
+Le type de service ici est **LoadBalancer**, qui expose l’application au monde extérieur avec une **IP publique** (dans un environnement cloud) et gère la répartition du trafic entre les pods disponibles.
+
+> 📌 **Raison du choix :** C’est la méthode la plus directe et standard pour rendre une application publique dans un environnement cloud. Bien qu’elle ne fonctionne pleinement qu’avec un fournisseur cloud, elle est ici utilisée pour illustrer une configuration de production.
 
 ```yml
 apiVersion: v1
@@ -369,7 +417,7 @@ Handling connection for 9090
 
 ---
 
-### 4. Accès externe
+### 5. Accès externe
 
 Pour permettre l’accès aux applications depuis l’extérieur du cluster Kubernetes, plusieurs solutions ont été mises en place :
 
@@ -385,7 +433,7 @@ Pour permettre l’accès aux applications depuis l’extérieur du cluster Kube
 
 Ces différents modes d’accès permettent de tester et de valider la disponibilité des applications sans nécessiter de configuration réseau complexe en local.
 
-### 5. Applications
+### 6. Applications
 
 Aperçu visuel des applications déployées dans le cluster Kubernetes :
 
